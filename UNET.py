@@ -110,14 +110,14 @@ class UNET(nn.Module):
         self.downblock=nn.ModuleList([])
         for i in range(len(hp.down_blocks)-1):
             self.downblock.append(
-                ResidualBlock(hp.down_blocks[i],hp.down_blocks[i+1],hp.temb_dim,hp.num_layers,True,True,hp.text_embed_dim)
+                ResidualBlock(hp.down_blocks[i],hp.down_blocks[i+1],hp.temb_dim,hp.num_layers,True,False,hp.text_embed_dim)
             )
             self.downblock.append(nn.Conv2d(hp.down_blocks[i+1],hp.down_blocks[i+1],kernel_size=3,stride=2,padding=1))
             
         self.midblock=nn.ModuleList([])
         for i in range(len(hp.mid_blocks)-1):
             self.midblock.append(
-                ResidualBlock(hp.mid_blocks[i],hp.mid_blocks[i+1],hp.temb_dim,hp.num_layers,True,True,hp.text_embed_dim)
+                ResidualBlock(hp.mid_blocks[i],hp.mid_blocks[i+1],hp.temb_dim,hp.num_layers,True,False,hp.text_embed_dim)
             )
         
         # 2 1 0
@@ -125,7 +125,7 @@ class UNET(nn.Module):
         for i in reversed(range(len(hp.down_blocks) - 1)):
             self.upblock.append(nn.ConvTranspose2d(hp.down_blocks[i],hp.down_blocks[i],kernel_size=4,stride=2,padding=1))
             self.upblock.append(
-                ResidualBlock(hp.down_blocks[i]*2,hp.down_blocks[i-1] if i!=0 else hp.conv_out_channels,hp.temb_dim,hp.num_layers,True,True,hp.text_embed_dim)
+                ResidualBlock(hp.down_blocks[i]*2,hp.down_blocks[i-1] if i!=0 else hp.conv_out_channels,hp.temb_dim,hp.num_layers,True,False,hp.text_embed_dim)
             )
             
             
@@ -144,13 +144,13 @@ class UNET(nn.Module):
                 x=layer(x,t_emb,context)
             else:
                 x=layer(x)
-                
+                        
         for layer in self.midblock:
             if isinstance(layer,ResidualBlock):
                 x=layer(x,t_emb,context)
             else:
                 x=layer(x)
-               
+            
         for layer in self.upblock:
             if isinstance(layer,ResidualBlock):
                 x=layer(x,t_emb,context)
